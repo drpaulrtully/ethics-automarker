@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Ethics Practice (Automarker)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Gate (access code) -->
+  <div id="gate" class="gate" role="dialog" aria-modal="true" aria-label="Access code gate">
+    <div class="gateCard">
+      <div class="gateBrand">
+        <div class="logo">FEthink</div>
+        <div>
+          <h1>AI Ethics Practice</h1>
+          <p>Enter the access code from your Payhip lesson.</p>
+        </div>
+      </div>
+
+      <label class="gateLabel" for="codeInput">Access code</label>
+      <div class="gateRow">
+        <input id="codeInput" type="text" autocomplete="one-time-code" placeholder="e.g. FETHINK-ETHICS1" />
+        <button id="unlockBtn" class="primary">Unlock</button>
+      </div>
+
+      <div id="gateMsg" class="gateMsg" aria-live="polite"></div>
+
+      <div class="gateHint">
+        Tip: this page opens in a new tab so you can return to your lesson easily.
+      </div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">FEthink</div>
+      <div class="title">
+        <h1>Practice: AI Safety & Ethics</h1>
+        <p>Evaluative response • Aim for <span id="targetWords">100–250</span> words</p>
+      </div>
+
+      <div class="headerBtns">
+        <a id="backToCourse" class="linkBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Back to lesson</a>
+        <a id="nextLesson" class="linkBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Next: Quiz</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card">
+      <div class="twoCol">
+
+        <!-- LEFT: question + template -->
+        <div class="panel">
+          <h2>Task</h2>
+          <p id="questionText" class="subtle">
+            Loading question…
+          </p>
+
+          <div class="templateBox">
+            <div class="templateHeader">
+              <h3>Response template</h3>
+              <div class="templateBtns">
+                <button id="insertTemplateBtn" class="secondary small">Insert template</button>
+                <button id="clearBtn" class="secondary small">Clear</button>
+              </div>
+            </div>
+
+            <textarea id="answerText" rows="16" placeholder="Write your answer here..."></textarea>
+
+            <div class="actionsRow">
+              <button id="submitBtn" class="primary">Submit for feedback</button>
+              <div id="wordCountBox" class="scoreBox">Words: —</div>
+            </div>
+
+            <div class="hint">
+              Minimum to be marked: <strong><span id="minGate">50</span> words</strong>.
+              Below this, you’ll be asked to add more before feedback is shown.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: feedback -->
+        <div class="panel">
+          <h2>Feedback</h2>
+
+          <div class="feedbackCard">
+            <div class="feedbackTop">
+              <div class="metric">
+                <div class="metricLabel">Score</div>
+                <div id="scoreBig" class="metricValue">—</div>
+              </div>
+              <div class="metric">
+                <div class="metricLabel">Word count</div>
+                <div id="wordCountBig" class="metricValue">—</div>
+              </div>
+            </div>
+
+            <div id="feedbackBox" class="feedbackBox" aria-live="polite"></div>
+
+            <!-- Model answer container: hidden until >=50 words AND server returns it -->
+            <div id="modelWrap" class="modelWrap" style="display:none;">
+              <h3>Example of a strong response</h3>
+              <pre id="modelAnswer" class="modelAnswer"></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>FEthink automarker • opened from Payhip (new tab) • return using “Next: Quiz”</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
