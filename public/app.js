@@ -1,10 +1,11 @@
 /* =========================================================
    FEthink — AI Ethics Automarker (Level 1)
-   - Simple access code gate -> signed httpOnly cookie session
-   - No URL variables needed (Payhip limitation)
+   - Access code gate -> signed httpOnly cookie session
    - Marking rules:
-       <50 words: "Please add..." only; no rubric; no model answer
-       >=50 words: score + feedback + model answer
+       <50 words: "Please add..." only; no score; no extras; no model answer
+       >=50 words: score + strengths + tags + grid + improvement notes
+       + optional Learn more framework tabs (collapsed by default)
+       + model answer (collapsed) shown only when server returns it
    - Target length shown: 100–250 words
    ========================================================= */
 
@@ -31,6 +32,36 @@ const scoreBig = document.getElementById("scoreBig");
 const wordCountBig = document.getElementById("wordCountBig");
 const feedbackBox = document.getElementById("feedbackBox");
 
+// NEW: Strengths / Tags / Grid
+const strengthsWrap = document.getElementById("strengthsWrap");
+const strengthsList = document.getElementById("strengthsList");
+
+const tagsWrap = document.getElementById("tagsWrap");
+const tagsRow = document.getElementById("tagsRow");
+
+const gridWrap = document.getElementById("gridWrap");
+const gEthical = document.getElementById("gEthical");
+const gImpact = document.getElementById("gImpact");
+const gLegal = document.getElementById("gLegal");
+const gRecs = document.getElementById("gRecs");
+const gStructure = document.getElementById("gStructure");
+
+// NEW: Learn more panel + tabs
+const learnMoreWrap = document.getElementById("learnMoreWrap");
+const learnMoreBtn = document.getElementById("learnMoreBtn");
+const frameworkPanel = document.getElementById("frameworkPanel");
+const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
+
+const gdprExpectation = document.getElementById("gdprExpectation");
+const gdprCase = document.getElementById("gdprCase");
+const unescoExpectation = document.getElementById("unescoExpectation");
+const unescoCase = document.getElementById("unescoCase");
+const ofstedExpectation = document.getElementById("ofstedExpectation");
+const ofstedCase = document.getElementById("ofstedCase");
+const jiscExpectation = document.getElementById("jiscExpectation");
+const jiscCase = document.getElementById("jiscCase");
+
+// Model answer
 const modelWrap = document.getElementById("modelWrap");
 const modelAnswerEl = document.getElementById("modelAnswer");
 
@@ -55,15 +86,42 @@ function hideGate() {
   gateEl.style.display = "none";
 }
 
-function resetFeedback() {
-  scoreBig.textContent = "—";
-  wordCountBig.textContent = "—";
-  feedbackBox.textContent = "";
+function resetExtras() {
+  // Strengths
+  strengthsWrap.style.display = "none";
+  strengthsList.innerHTML = "";
+
+  // Tags
+  tagsWrap.style.display = "none";
+  tagsRow.innerHTML = "";
+
+  // Grid
+  gridWrap.style.display = "none";
+  gEthical.textContent = "—";
+  gImpact.textContent = "—";
+  gLegal.textContent = "—";
+  gRecs.textContent = "—";
+  gStructure.textContent = "—";
+
+  // Learn more panel
+  learnMoreWrap.style.display = "none";
+  frameworkPanel.style.display = "none";
+  frameworkPanel.setAttribute("aria-hidden", "true");
+  learnMoreBtn.setAttribute("aria-expanded", "false");
+
+  // Model answer
   modelWrap.style.display = "none";
   modelAnswerEl.textContent = "";
 }
 
-/* ---------------- Load config ---------------- */
+function resetFeedback() {
+  scoreBig.textContent = "—";
+  wordCountBig.textContent = "—";
+  feedbackBox.textContent = "";
+  resetExtras();
+}
+
+/* ---------------- Config load ---------------- */
 async function loadConfig() {
   try {
     const res = await fetch("/api/config", { credentials: "include" });
@@ -86,7 +144,7 @@ async function loadConfig() {
       nextLesson.style.display = "inline-block";
     }
   } catch {
-    // silent: UI still works
+    // silent
   }
 }
 
@@ -145,7 +203,6 @@ insertTemplateBtn.addEventListener("click", () => {
   if (!existing) {
     answerTextEl.value = TEMPLATE_TEXT;
   } else {
-    // Insert at top without overwriting
     answerTextEl.value = `${TEMPLATE_TEXT}\n\n---\n\n${existing}`;
   }
   answerTextEl.focus();
@@ -158,6 +215,121 @@ clearBtn.addEventListener("click", () => {
   resetFeedback();
 });
 
+/* ---------------- Learn more toggle + tabs ---------------- */
+function setActiveTab(tabKey) {
+  // buttons
+  tabButtons.forEach(btn => {
+    const isActive = btn.dataset.tab === tabKey;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  // panes
+  const panes = ["gdpr", "unesco", "ofsted", "jisc"];
+  panes.forEach(k => {
+    const pane = document.getElementById(`tab-${k}`);
+    if (pane) pane.classList.toggle("active", k === tabKey);
+  });
+}
+
+learnMoreBtn?.addEventListener("click", () => {
+  const isOpen = frameworkPanel.style.display === "block";
+  if (isOpen) {
+    frameworkPanel.style.display = "none";
+    frameworkPanel.setAttribute("aria-hidden", "true");
+    learnMoreBtn.setAttribute("aria-expanded", "false");
+  } else {
+    frameworkPanel.style.display = "block";
+    frameworkPanel.setAttribute("aria-hidden", "false");
+    learnMoreBtn.setAttribute("aria-expanded", "true");
+  }
+});
+
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
+});
+
+/* ---------------- Render helpers ---------------- */
+function renderStrengths(strengths) {
+  if (!Array.isArray(strengths) || strengths.length === 0) {
+    strengthsWrap.style.display = "none";
+    strengthsList.innerHTML = "";
+    return;
+  }
+  strengthsList.innerHTML = strengths.slice(0, 3).map(s => `<li>${escapeHtml(s)}</li>`).join("");
+  strengthsWrap.style.display = "block";
+}
+
+function tagBadge(name, status) {
+  // status: "ok" | "mid" | "bad"
+  const symbol = status === "ok" ? "✔" : status === "mid" ? "◐" : "✗";
+  const cls = status === "ok" ? "tag ok" : status === "mid" ? "tag mid" : "tag bad";
+  return `<span class="${cls}"><span class="tagStatus">${symbol}</span>${escapeHtml(name)}</span>`;
+}
+
+function renderTags(tags) {
+  // tags: [{name, status}] where status is ok/mid/bad
+  if (!Array.isArray(tags) || tags.length === 0) {
+    tagsWrap.style.display = "none";
+    tagsRow.innerHTML = "";
+    return;
+  }
+  tagsRow.innerHTML = tags.map(t => tagBadge(t.name, t.status)).join("");
+  tagsWrap.style.display = "block";
+}
+
+function renderGrid(grid) {
+  // grid: {ethical, impact, legal, recs, structure} -> "Secure" / "Developing" / "Missing"
+  if (!grid) {
+    gridWrap.style.display = "none";
+    return;
+  }
+  gEthical.textContent = grid.ethical || "—";
+  gImpact.textContent = grid.impact || "—";
+  gLegal.textContent = grid.legal || "—";
+  gRecs.textContent = grid.recs || "—";
+  gStructure.textContent = grid.structure || "—";
+  gridWrap.style.display = "block";
+}
+
+function renderFramework(framework) {
+  // framework: {gdpr:{expectation,case}, unesco:{...}, ofsted:{...}, jisc:{...}}
+  if (!framework) {
+    learnMoreWrap.style.display = "none";
+    return;
+  }
+
+  gdprExpectation.textContent = framework.gdpr?.expectation || "—";
+  gdprCase.textContent = framework.gdpr?.case || "—";
+
+  unescoExpectation.textContent = framework.unesco?.expectation || "—";
+  unescoCase.textContent = framework.unesco?.case || "—";
+
+  ofstedExpectation.textContent = framework.ofsted?.expectation || "—";
+  ofstedCase.textContent = framework.ofsted?.case || "—";
+
+  jiscExpectation.textContent = framework.jisc?.expectation || "—";
+  jiscCase.textContent = framework.jisc?.case || "—";
+
+  // show container (panel still collapsed until button clicked)
+  learnMoreWrap.style.display = "block";
+  frameworkPanel.style.display = "none";
+  frameworkPanel.setAttribute("aria-hidden", "true");
+  learnMoreBtn.setAttribute("aria-expanded", "false");
+
+  // default tab
+  setActiveTab("gdpr");
+}
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 /* ---------------- Submit for marking ---------------- */
 async function mark() {
   resetFeedback();
@@ -165,7 +337,6 @@ async function mark() {
   const answerText = answerTextEl.value.trim();
   const words = wc(answerText);
 
-  // immediate client-side hint (server is still source of truth)
   if (words === 0) {
     feedbackBox.textContent = "Write your answer first (aim for 100–250 words).";
     return;
@@ -200,18 +371,27 @@ async function mark() {
     wordCountBig.textContent = String(result.wordCount ?? words);
 
     if (result.gated) {
-      // Under 50 words: only show the "Please add..." message, no model answer.
+      // Under 50 words: only show the "Please add..." message, no extras, no model answer.
       scoreBig.textContent = "—";
       feedbackBox.textContent = result.message || "Please add to your answer.";
-      modelWrap.style.display = "none";
-      modelAnswerEl.textContent = "";
+      resetExtras();
       return;
     }
 
-    // >= 50 words: show rubric score + feedback + model answer
+    // >= 50 words
     scoreBig.textContent = `${result.score}/10`;
+
+    // strengths + tags + grid + notes
+    renderStrengths(result.strengths);
+    renderTags(result.tags);
+    renderGrid(result.grid);
+
     feedbackBox.textContent = result.feedback || "";
 
+    // Learn more panel only if server provides framework content
+    renderFramework(result.framework);
+
+    // Model answer only if server returns it (already respects >=50 words rule)
     if (result.modelAnswer) {
       modelAnswerEl.textContent = result.modelAnswer;
       modelWrap.style.display = "block";
@@ -228,13 +408,7 @@ async function mark() {
 
 submitBtn.addEventListener("click", mark);
 
-/* ---------------- Initial load ----------------
-   We don't know if they have a valid session cookie until they try marking.
-   We still load config so the page doesn't feel blank.
-*/
+/* ---------------- Initial load ---------------- */
 loadConfig().then(() => {
-  // Gate is shown by default; if you want “silent” access when cookie exists,
-  // the simplest approach is to try a mark with empty text — not desirable.
-  // Instead, we keep the gate until they unlock per session.
   showGate();
 });

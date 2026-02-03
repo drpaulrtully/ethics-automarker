@@ -98,13 +98,117 @@
               </div>
             </div>
 
+            <!-- NEW: Strengths (hidden until populated) -->
+            <div id="strengthsWrap" class="block" style="display:none;">
+              <h3>What you did well</h3>
+              <ul id="strengthsList" class="bullets"></ul>
+            </div>
+
+            <!-- NEW: Tags (hidden until populated) -->
+            <div id="tagsWrap" class="block" style="display:none;">
+              <h3>Feedback tags</h3>
+              <div id="tagsRow" class="tagsRow"></div>
+            </div>
+
+            <!-- NEW: Simple grid (hidden until populated) -->
+            <div id="gridWrap" class="block" style="display:none;">
+              <h3>Strengths & gaps</h3>
+              <div class="grid">
+                <div class="gridRow">
+                  <div class="gridName">Identifying ethical issues</div>
+                  <div id="gEthical" class="gridStatus">—</div>
+                </div>
+                <div class="gridRow">
+                  <div class="gridName">Explaining impact</div>
+                  <div id="gImpact" class="gridStatus">—</div>
+                </div>
+                <div class="gridRow">
+                  <div class="gridName">Legal awareness</div>
+                  <div id="gLegal" class="gridStatus">—</div>
+                </div>
+                <div class="gridRow">
+                  <div class="gridName">Quality of recommendations</div>
+                  <div id="gRecs" class="gridStatus">—</div>
+                </div>
+                <div class="gridRow">
+                  <div class="gridName">Structure & clarity</div>
+                  <div id="gStructure" class="gridStatus">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Existing: improvement notes -->
             <div id="feedbackBox" class="feedbackBox" aria-live="polite"></div>
+
+            <!-- NEW: Learn more button + 4-tab panel (hidden by default) -->
+            <div id="learnMoreWrap" class="block" style="display:none;">
+              <button id="learnMoreBtn" class="secondary full" aria-expanded="false">
+                Learn more
+              </button>
+
+              <div id="frameworkPanel" class="frameworkPanel" style="display:none;" aria-hidden="true">
+                <div class="tabs" role="tablist" aria-label="Framework tabs">
+                  <button class="tabBtn active" data-tab="gdpr" role="tab" aria-selected="true">GDPR</button>
+                  <button class="tabBtn" data-tab="unesco" role="tab" aria-selected="false">UNESCO</button>
+                  <button class="tabBtn" data-tab="ofsted" role="tab" aria-selected="false">Ofsted</button>
+                  <button class="tabBtn" data-tab="jisc" role="tab" aria-selected="false">Jisc</button>
+                </div>
+
+                <div class="tabBody">
+                  <div id="tab-gdpr" class="tabPane active" role="tabpanel">
+                    <div class="fwRow">
+                      <div class="fwTitle">Expectation</div>
+                      <div id="gdprExpectation" class="fwText">—</div>
+                    </div>
+                    <div class="fwRow">
+                      <div class="fwTitle">How the case illustrates it</div>
+                      <div id="gdprCase" class="fwText">—</div>
+                    </div>
+                  </div>
+
+                  <div id="tab-unesco" class="tabPane" role="tabpanel">
+                    <div class="fwRow">
+                      <div class="fwTitle">Expectation</div>
+                      <div id="unescoExpectation" class="fwText">—</div>
+                    </div>
+                    <div class="fwRow">
+                      <div class="fwTitle">How the case illustrates it</div>
+                      <div id="unescoCase" class="fwText">—</div>
+                    </div>
+                  </div>
+
+                  <div id="tab-ofsted" class="tabPane" role="tabpanel">
+                    <div class="fwRow">
+                      <div class="fwTitle">Expectation</div>
+                      <div id="ofstedExpectation" class="fwText">—</div>
+                    </div>
+                    <div class="fwRow">
+                      <div class="fwTitle">How the case illustrates it</div>
+                      <div id="ofstedCase" class="fwText">—</div>
+                    </div>
+                  </div>
+
+                  <div id="tab-jisc" class="tabPane" role="tabpanel">
+                    <div class="fwRow">
+                      <div class="fwTitle">Expectation</div>
+                      <div id="jiscExpectation" class="fwText">—</div>
+                    </div>
+                    <div class="fwRow">
+                      <div class="fwTitle">How the case illustrates it</div>
+                      <div id="jiscCase" class="fwText">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- Model answer container: hidden until >=50 words AND server returns it -->
             <div id="modelWrap" class="modelWrap" style="display:none;">
               <h3>Example of a strong response</h3>
+              <div class="subtle">Compare your response to the example below. You are not expected to match it exactly.</div>
               <pre id="modelAnswer" class="modelAnswer"></pre>
             </div>
+
           </div>
         </div>
 
